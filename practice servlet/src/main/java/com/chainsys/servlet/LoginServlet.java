@@ -40,7 +40,8 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("user", user);
                 response.sendRedirect("PhonebookServlet?action=viewcontacts");
             } else {
-                response.sendRedirect("login.jsp?msg=Invalid email or password. Please try again.");
+            	
+                response.sendRedirect("login.jsp?msg=1");
             }
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();

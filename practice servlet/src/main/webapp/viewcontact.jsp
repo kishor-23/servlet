@@ -5,13 +5,28 @@
 <%@ page import="javax.servlet.http.HttpSession" %>
 
 <%
-   
     if (session == null || session.getAttribute("user") == null) {
         response.sendRedirect("login.jsp");
         return;
     }
-User user = (User) session.getAttribute("user");
+    User user = (User) session.getAttribute("user");
     List<Contact> contacts = (List<Contact>) request.getAttribute("contacts");
+
+    // Default values for sortField, sortOrder, and searchQuery
+    String sortField = (String) request.getAttribute("sortField");
+    if (sortField == null) {
+        sortField = "name";
+    }
+    String sortOrder = (String) request.getAttribute("sortOrder");
+    if (sortOrder == null) {
+        sortOrder = "asc";
+    }
+    String searchQuery = (String) request.getAttribute("searchQuery");
+    if (searchQuery == null) {
+        searchQuery = "";
+    }
+
+    String nameSortOrder = "asc".equals(sortOrder) && "name".equals(sortField) ? "desc" : "asc";
 %>
 
 <html>
@@ -22,17 +37,22 @@ User user = (User) session.getAttribute("user");
 <body>
     <div class="container">
         <h2><%= user.getName() %> Contacts</h2>
-          <a href='LogoutServlet' class="logout">Logout</a>
+        <a href='LogoutServlet' class="logout">Logout</a>
         <a href='addcontacts.jsp' class="button">Add Contact</a>
+        <form method="get" action="PhonebookServlet">
+            <input type="hidden" name="action" value="viewcontacts">
+            <input type="text" name="searchQuery" placeholder="Search by name..." value="<%= searchQuery %>">
+            <input type="submit" value="Search">
+        </form>
         <table>
             <tr>
-                <th>Name</th>
+                <th><a href="PhonebookServlet?action=viewcontacts&sortField=name&sortOrder=<%= nameSortOrder %>&searchQuery=<%= searchQuery %>">Name</a></th>
                 <th>Phone Number</th>
                 <th>Email</th>
                 <th>Actions</th>
             </tr>
             <%
-                if (contacts != null) {
+                if (contacts != null && !contacts.isEmpty()) {
                     for (Contact contact : contacts) {
             %>
             <tr>
@@ -56,3 +76,5 @@ User user = (User) session.getAttribute("user");
             %>
         </table>
     </div>
+</body>
+</html>

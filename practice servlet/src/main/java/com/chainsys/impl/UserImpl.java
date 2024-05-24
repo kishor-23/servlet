@@ -56,6 +56,26 @@ public class UserImpl implements UserDAO {
         }
         return null;
     }
+    
+    public void registerUser(String mailId, String name, String password) throws ClassNotFoundException, SQLException {
+		String selectQuery = "SELECT mailId,password FROM users WHERE mailId = ? ";
+		PreparedStatement selectStatement = con.prepareStatement(selectQuery);
+		selectStatement.setString(1, mailId);
+		ResultSet resultSet = selectStatement.executeQuery();
+
+		if (!resultSet.next()) {
+			String insertQuery = "INSERT INTO users (mailId, name, password) VALUES (?, ?, ?)";
+			PreparedStatement insertStatement = con.prepareStatement(insertQuery);
+			insertStatement.setString(1, mailId);
+			insertStatement.setString(2, name);
+			insertStatement.setString(3, password);
+			insertStatement.executeUpdate();
+			System.out.println("User registered successfully.");
+		} else {
+			System.out.println("User already exists with this email ID. use another email id to sign up or sign in ");
+		}
+
+	}
 
 	@Override
 	public List<User> getAllUsers() throws SQLException, ClassNotFoundException {

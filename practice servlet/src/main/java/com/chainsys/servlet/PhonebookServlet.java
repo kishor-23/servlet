@@ -2,7 +2,10 @@ package com.chainsys.servlet;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -30,15 +33,54 @@ public class PhonebookServlet extends HttpServlet {
         }
     }
 
+
     private synchronized void viewContacts(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             User user = (User) session.getAttribute("user");
             int userId = user.getId();
+            String sortField = request.getParameter("sortField");
+            String sortOrder = request.getParameter("sortOrder");
+            String searchQuery = request.getParameter("searchQuery");
+
             try {
                 List<Contact> contacts = contactOperations.getAllContacts(userId);
+
+                // Apply search filter
+                if (searchQuery != null && !searchQuery.isEmpty()) {
+                    contacts = contacts.stream()
+                            .filter(contact -> contact.getName().toLowerCase().contains(searchQuery.toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+
+                // Apply sorting
+                if (sortField != null && !sortField.isEmpty() && sortOrder != null && !sortOrder.isEmpty()) {
+                    Comparator<Contact> comparator;
+                    switch (sortField) {
+                        case "name":
+                            comparator = Comparator.comparing(Contact::getName);
+                            break;
+                        default:
+                            comparator = Comparator.comparing(Contact::getName);
+                            sortField = "name";
+                            sortOrder = "asc";
+                            break;
+                    }
+
+                    if ("desc".equalsIgnoreCase(sortOrder)) {
+                        comparator = comparator.reversed();
+                    }
+
+                    contacts = contacts.stream()
+                            .sorted(comparator)
+                            .collect(Collectors.toList());
+                }
+
                 request.setAttribute("contacts", contacts);
+                request.setAttribute("sortField", sortField);
+                request.setAttribute("sortOrder", sortOrder);
+                request.setAttribute("searchQuery", searchQuery);
                 request.getRequestDispatcher("viewcontact.jsp").forward(request, response);
             } catch (SQLException | ClassNotFoundException e) {
                 e.printStackTrace();
